@@ -74,6 +74,12 @@ function forceVisibilityColumn(frame) {
     }
 }
 
+function forceHtmlColumnWhenRequestingReadingTime(frame) {
+    if (frame.options.columns && frame.options.columns.includes('reading_time') && !frame.options.columns.includes('html')) {
+        frame.options.columns.push('html');
+    }
+}
+
 function defaultFormat(frame) {
     if (frame.options.formats) {
         return;
@@ -130,6 +136,10 @@ module.exports = {
 
             setDefaultOrder(frame);
             forceVisibilityColumn(frame);
+
+            // CASE: Post html is required to calculate reading_time. If the request includes
+            // reading_time but not html this handles adding the html field.
+            forceHtmlColumnWhenRequestingReadingTime(frame);
             mapWithRelated(frame);
         }
 
@@ -157,6 +167,10 @@ module.exports = {
 
             setDefaultOrder(frame);
             forceVisibilityColumn(frame);
+
+            // CASE: Post html is required to calculate reading_time. If the request includes
+            // reading_time but not html this handles adding the html field.
+            forceHtmlColumnWhenRequestingReadingTime(frame);
         }
 
         if (!localUtils.isContentAPI(frame)) {
