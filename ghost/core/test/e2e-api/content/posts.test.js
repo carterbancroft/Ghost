@@ -165,6 +165,16 @@ describe('Posts Content API', function () {
             .matchBodySnapshot();
     });
 
+    it('Can request reading_time and html together', async function () {
+        await agent
+            .get('posts/?&fields=reading_time,html')
+            .expectStatus(200)
+            .matchHeaderSnapshot({
+                etag: anyEtag
+            })
+            .matchBodySnapshot();
+    });
+
     it('Can include relations', async function () {
         await agent
             .get('posts/?include=tags,authors')
