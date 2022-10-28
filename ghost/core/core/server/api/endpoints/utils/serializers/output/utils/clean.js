@@ -105,6 +105,11 @@ const post = (attrs, frame) => {
         if (columns && columns.includes('visibility') && fields && !fields.includes('visibility')) {
             delete attrs.visibility;
         }
+        // NOTE: The html column will always be included if reading_time is included, even if the request did
+        // not include it. If that's the case, remove it here.
+        if (columns && columns.includes('html') && fields && !fields.includes('html')) {
+            delete attrs.html;
+        }
 
         if (fields && !fields.includes('comments')) {
             delete attrs.comments;
