@@ -268,7 +268,7 @@ async function initDynamicRouting() {
  * @param {object} options
  * @param {object} options.config
  */
-async function initServices({config}) {
+async function initServices({ghostServer, config}) {
     debug('Begin: initServices');
 
     debug('Begin: Services');
@@ -321,7 +321,7 @@ async function initServices({config}) {
         comments.init(),
         linkTracking.init(),
         audienceFeedback.init(),
-        webSocket.init()
+        webSocket.init({webSocketServer: ghostServer.webSocketServer})
     ]);
     debug('End: Services');
 
@@ -460,7 +460,7 @@ async function bootGhost({backend = true, frontend = true, server = true} = {}) 
             await initDynamicRouting();
         }
 
-        await initServices({config});
+        await initServices({ghostServer, config});
         debug('End: Load Ghost Services & Apps');
 
         // Step 5 - Mount the full Ghost app onto the minimal root app & disable maintenance mode
