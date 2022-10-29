@@ -7,6 +7,7 @@ const logging = require('@tryghost/logging');
 const notify = require('./notify');
 const moment = require('moment');
 const stoppable = require('stoppable');
+const WebSocket = require('ws');
 
 const messages = {
     cantTouchThis: 'Can\'t touch this',
@@ -54,6 +55,7 @@ class GhostServer {
 
         this.rootApp = null;
         this.httpServer = null;
+        this.webSocketServer = null;
 
         // Tasks that should be run before the server exits
         this.cleanupTasks = [];
@@ -81,6 +83,12 @@ class GhostServer {
                 port,
                 host
             );
+
+            self.webSocketServer = new WebSocket.Server({server: self.httpServer});
+            self.webSocketServer.on('connection', (ws) => {
+                debug('Web socket client connected');
+                ws.on('close', () => debug('Web socket client disconnected'));
+            });
 
             self.httpServer.on('error', function (error) {
                 let ghostError;
