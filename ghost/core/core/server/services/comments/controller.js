@@ -105,11 +105,7 @@ module.exports = class CommentsController {
     }
 
     async count(frame) {
-        if (!frame?.data?.ids) {
-            return await this.stats.getAllCounts();
-        }
-
-        return await this.stats.getCountsByPost(frame.data.ids);
+        return await this.service.getCommentCount(frame?.data?.ids);
     }
 
     /**

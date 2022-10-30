@@ -15,7 +15,7 @@ const messages = {
 };
 
 class CommentsService {
-    constructor({config, logging, models, mailer, settingsCache, settingsHelpers, urlService, urlUtils, contentGating}) {
+    constructor({config, logging, models, mailer, settingsCache, settingsHelpers, urlService, urlUtils, contentGating, stats}) {
         /** @private */
         this.models = models;
 
@@ -37,6 +37,9 @@ class CommentsService {
             urlService,
             urlUtils
         });
+
+        /** @private */
+        this.stats = stats;
     }
 
     /**
@@ -174,6 +177,17 @@ class CommentsService {
     }
 
     /**
+     * @param {Array} postIds to get comment counts for
+     */
+    async getCommentCount(postIds) {
+        if (!postIds) {
+            return await this.stats.getAllCounts();
+        }
+
+        return await this.stats.getCountsByPost(postIds);
+    }
+
+    /**
      * @param {string} id - The ID of the Comment to get replies from
      * @param {any} options
      */
@@ -237,6 +251,8 @@ class CommentsService {
             status: 'published'
         }, options);
 
+        // const commentCount = await this.getCommentCount([post]);
+
         if (!options.context.internal) {
             await this.sendNewCommentNotifications(model);
         }
@@ -248,7 +264,9 @@ class CommentsService {
         }));
 
         // Instead of returning the model, fetch it again, so we have all the relations properly fetched
-        return await this.models.Comment.findOne({id: model.id}, {...options, require: true});
+        const commentModel = await this.models.Comment.findOne({id: model.id}, {...options, require: true});
+
+        return commentModel;
     }
 
     /**

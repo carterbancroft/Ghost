@@ -15,6 +15,7 @@ class CommentsServiceWrapper {
         const membersService = require('../members');
         const db = require('../../data/db');
         const settingsHelpers = require('../settings-helpers');
+        const stats = new CommentsStats({db});
 
         this.api = new CommentsService({
             config,
@@ -25,12 +26,11 @@ class CommentsServiceWrapper {
             settingsHelpers,
             urlService,
             urlUtils,
-            contentGating: membersService.contentGating
+            contentGating: membersService.contentGating,
+            stats
         });
 
-        const stats = new CommentsStats({db});
-
-        this.controller = new CommentsController(this.api, stats);
+        this.controller = new CommentsController(this.api);
     }
 }
 
