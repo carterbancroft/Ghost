@@ -252,14 +252,8 @@ class CommentsService {
             status: 'published'
         }, options);
 
-        // Get the comment count so we can broadcast it via websocket to currently open connections for real-time count updates.
-        const commentCount = await this.getCommentCount([post]);
-        const postId = Object.keys(commentCount)[0];
-        const count = commentCount[postId];
-        const data = {type: 'comment-count', data: {postId, count}};
-        webSocketService.controller.broadcast(data);
-
         if (!options.context.internal) {
+            await this.broadcastUpdatedCommentCount(post);
             await this.sendNewCommentNotifications(model);
         }
 
@@ -273,6 +267,17 @@ class CommentsService {
         const commentModel = await this.models.Comment.findOne({id: model.id}, {...options, require: true});
 
         return commentModel;
+    }
+
+    async broadcastUpdatedCommentCount(post) {
+        const commentCount = await this.getCommentCount([post]);
+
+        const postId = Object.keys(commentCount)[0];
+        const count = commentCount[postId];
+
+        const data = {type: 'comment-count', context: {postId, count}};
+
+        webSocketService.controller.broadcast(data);
     }
 
     /**
@@ -324,6 +329,7 @@ class CommentsService {
         }, options);
 
         if (!options.context.internal) {
+            await this.broadcastUpdatedCommentCount(parentComment.get('post_id'));
             await this.sendNewCommentNotifications(model);
         }
 
@@ -360,6 +366,9 @@ class CommentsService {
             require: true,
             ...options
         });
+
+        const postId = existingComment.get('post_id');
+        await this.broadcastUpdatedCommentCount(postId);
 
         return model;
     }
