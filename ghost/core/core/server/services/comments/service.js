@@ -2,6 +2,7 @@ const tpl = require('@tryghost/tpl');
 const errors = require('@tryghost/errors');
 const {MemberCommentEvent} = require('@tryghost/member-events');
 const DomainEvents = require('@tryghost/domain-events');
+const webSocketService = require('../../services/websocket');
 
 const messages = {
     commentNotFound: 'Comment could not be found',
@@ -251,7 +252,8 @@ class CommentsService {
             status: 'published'
         }, options);
 
-        // const commentCount = await this.getCommentCount([post]);
+        const commentCount = await this.getCommentCount([post]);
+        webSocketService.controller.broadcast(commentCount);
 
         if (!options.context.internal) {
             await this.sendNewCommentNotifications(model);

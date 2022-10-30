@@ -6,7 +6,7 @@ module.exports = class WebSocketService {
     broadcast(data) {
         this.webSocketServer.clients.forEach((client) => {
             if (client !== this.webSocketServer) {
-                client.send(data);
+                client.send(JSON.stringify(data));
             }
         });
     }
