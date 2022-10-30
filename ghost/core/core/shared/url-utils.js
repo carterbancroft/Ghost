@@ -7,6 +7,7 @@ const urlUtils = new UrlUtils({
     getSubdir: config.getSubdir,
     getSiteUrl: config.getSiteUrl,
     getAdminUrl: config.getAdminUrl,
+    getWebSocketUrl: config.getWebSocketUrl,
     slugs: config.get('slugs').protected,
     redirectCacheMaxAge: config.get('caching:301:maxAge'),
     baseApiPath: BASE_API_PATH

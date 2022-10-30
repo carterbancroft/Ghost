@@ -252,8 +252,12 @@ class CommentsService {
             status: 'published'
         }, options);
 
+        // Get the comment count so we can broadcast it via websocket to currently open connections for real-time count updates.
         const commentCount = await this.getCommentCount([post]);
-        webSocketService.controller.broadcast(commentCount);
+        const postId = Object.keys(commentCount)[0];
+        const count = commentCount[postId];
+        const data = {type: 'comment-count', data: {postId, count}};
+        webSocketService.controller.broadcast(data);
 
         if (!options.context.internal) {
             await this.sendNewCommentNotifications(model);

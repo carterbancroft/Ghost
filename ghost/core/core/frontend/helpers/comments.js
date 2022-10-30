@@ -56,6 +56,7 @@ module.exports = async function comments(options) {
         'ghost-comments': urlUtils.getSiteUrl(),
         api: urlUtils.urlFor('api', {type: 'content'}, true),
         admin: urlUtils.urlFor('admin', true),
+        'web-socket': urlUtils.urlFor('web-socket'),
         key: frontendKey,
         styles: stylesUrl,
         title: title,
