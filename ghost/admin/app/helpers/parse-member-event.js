@@ -1,11 +1,13 @@
 import Helper from '@ember/component/helper';
 import moment from 'moment-timezone';
 import {getNonDecimal, getSymbol} from 'ghost-admin/utils/currency';
+import {ghPluralize} from 'ghost-admin/helpers/gh-pluralize';
 import {inject as service} from '@ember/service';
 
 export default class ParseMemberEventHelper extends Helper {
     @service feature;
     @service utils;
+    @service membersUtils;
 
     compute([event, hasMultipleNewsletters]) {
         const subject = event.data.member.name || event.data.member.email;
@@ -42,10 +44,6 @@ export default class ParseMemberEventHelper extends Helper {
     getIcon(event) {
         let icon;
 
-        if (event.type === 'signup_event') {
-            icon = 'signed-up';
-        }
-
         if (event.type === 'login_event') {
             icon = 'logged-in';
         }
@@ -70,6 +68,10 @@ export default class ParseMemberEventHelper extends Helper {
             }
         }
 
+        if (event.type === 'signup_event' || (event.type === 'subscription_event' && event.data.type === 'created' && event.data.signup)) {
+            icon = 'signed-up';
+        }
+
         if (event.type === 'email_opened_event') {
             icon = 'opened-email';
         }
@@ -86,7 +88,7 @@ export default class ParseMemberEventHelper extends Helper {
             icon = 'comment';
         }
 
-        if (event.type === 'click_event') {
+        if (event.type === 'click_event' || event.type === 'aggregated_click_event') {
             icon = 'click';
         }
 
@@ -102,7 +104,7 @@ export default class ParseMemberEventHelper extends Helper {
     }
 
     getAction(event, hasMultipleNewsletters) {
-        if (event.type === 'signup_event') {
+        if (event.type === 'signup_event' || (event.type === 'subscription_event' && event.data.type === 'created' && event.data.signup)) {
             return 'signed up';
         }
 
@@ -168,6 +170,13 @@ export default class ParseMemberEventHelper extends Helper {
 
         if (event.type === 'click_event') {
             return 'clicked link in email';
+        }
+
+        if (event.type === 'aggregated_click_event') {
+            if (event.data.count.clicks <= 1) {
+                return 'clicked link in email';
+            }
+            return `clicked ${ghPluralize(event.data.count.clicks, 'link')} in email`;
         }
 
         if (event.type === 'feedback_event') {
@@ -248,10 +257,21 @@ export default class ParseMemberEventHelper extends Helper {
             if (mrrDelta === 0) {
                 return;
             }
-            let sign = mrrDelta > 0 ? '+' : '-';
-            let symbol = getSymbol(event.data.currency);
-            return `(MRR ${sign}${symbol}${Math.abs(mrrDelta)})`;
+            const symbol = getSymbol(event.data.currency);
+
+            if (event.data.type === 'created') {
+                const sign = mrrDelta > 0 ? '' : '-';
+                const tierName = this.membersUtils.hasMultipleTiers ? (event.data.tierName ?? 'paid') : 'paid';
+                return `${tierName} - ${sign}${symbol}${Math.abs(mrrDelta)}/month`;
+            }
+            const sign = mrrDelta > 0 ? '+' : '-';
+            return `MRR - ${sign}${symbol}${Math.abs(mrrDelta)}`;
         }
+
+        if (event.type === 'signup_event' && this.membersUtils.paidMembersEnabled) {
+            return 'Free';
+        }
+
         return;
     }
 
