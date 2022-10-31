@@ -84,7 +84,11 @@ class GhostServer {
                 host
             );
 
+            // I wondered if this should run on it's own port or even run without a server (via `noServer: true`)
+            // but in the end this is how I did it. I'm not sure if it's best but I'd love to get opinions.
             self.webSocketServer = new WebSocket.Server({server: self.httpServer});
+
+            // Notably there's no error handling here. There probably should be to make this production ready.
             self.webSocketServer.on('connection', (ws) => {
                 debug('Web socket client connected');
                 ws.on('close', () => debug('Web socket client disconnected'));

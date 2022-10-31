@@ -105,6 +105,9 @@ module.exports = class CommentsController {
     }
 
     async count(frame) {
+        // I'm curious what thoughts are on my change here. I moved stats logic out of this controller
+        // and into the service so it could be used both in this context and in the count broadcasting
+        // context.
         return await this.service.getCommentCount(frame?.data?.ids);
     }
 

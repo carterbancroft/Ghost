@@ -17,6 +17,8 @@ class CommentsServiceWrapper {
         const settingsHelpers = require('../settings-helpers');
         const stats = new CommentsStats({db});
 
+        // Moving stats into the service feels a little cleaner to me but I might be missing context.
+        // Let me know if you have any thoughts.
         this.api = new CommentsService({
             config,
             logging,

@@ -321,6 +321,11 @@ async function initServices({ghostServer, config}) {
         comments.init(),
         linkTracking.init(),
         audienceFeedback.init(),
+        // This feels like a code smell to me. That I'm passing the ghostServer into this init function
+        // and then using it for this one init call. Both that and the fact that I'm passing something
+        // into init at all make me feel a little uneasy, like I'm missing a better solution. I do like
+        // the service model in this context but I'm not sure this is the right way to give it access
+        // to the webSocketServer.
         webSocket.init({webSocketServer: ghostServer.webSocketServer})
     ]);
     debug('End: Services');

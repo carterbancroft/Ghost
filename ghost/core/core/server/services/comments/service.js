@@ -253,6 +253,8 @@ class CommentsService {
         }, options);
 
         if (!options.context.internal) {
+            // I'm wondering if this should only be run in an `internal` context like it is here. Maybe it
+            // should always run? I'm not sure but this felt right. Let me know if I'm off base.
             await this.broadcastUpdatedCommentCount(post);
             await this.sendNewCommentNotifications(model);
         }
@@ -269,12 +271,25 @@ class CommentsService {
         return commentModel;
     }
 
+    /**
+     * @param {string} post - The ID of the post to broadcast a comment count for
+     */
     async broadcastUpdatedCommentCount(post) {
         const commentCount = await this.getCommentCount([post]);
 
+        // This depends on the shape of the comment count object never changing, which is maybe a safe
+        // assumption but I'm not sure I know enough to know.
         const postId = Object.keys(commentCount)[0];
+
+        // Hmm maybe there should be some logging or any error if this happens.
+        if (!postId) {
+            return;
+        }
+
         const count = commentCount[postId];
 
+        // This might be a little naive to build this out here. There's probably some work to be done to
+        // support broadcasting data in a consistent shape/format.
         const data = {type: 'comment-count', context: {postId, count}};
 
         webSocketService.controller.broadcast(data);
@@ -329,6 +344,7 @@ class CommentsService {
         }, options);
 
         if (!options.context.internal) {
+            // Again, a little unclear on whether or not this should be happening in an internal context only.
             await this.broadcastUpdatedCommentCount(parentComment.get('post_id'));
             await this.sendNewCommentNotifications(model);
         }
