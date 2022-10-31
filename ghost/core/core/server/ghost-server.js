@@ -84,15 +84,7 @@ class GhostServer {
                 host
             );
 
-            // I wondered if this should run on it's own port or even run without a server (via `noServer: true`)
-            // but in the end this is how I did it. I'm not sure if it's best but I'd love to get opinions.
-            self.webSocketServer = new WebSocket.Server({server: self.httpServer});
-
-            // Notably there's no error handling here. There probably should be to make this production ready.
-            self.webSocketServer.on('connection', (ws) => {
-                debug('Web socket client connected');
-                ws.on('close', () => debug('Web socket client disconnected'));
-            });
+            self.configureWebSocket();
 
             self.httpServer.on('error', function (error) {
                 let ghostError;
@@ -140,6 +132,45 @@ class GhostServer {
             process
                 .removeAllListeners('SIGINT').on('SIGINT', self.shutdown.bind(self))
                 .removeAllListeners('SIGTERM').on('SIGTERM', self.shutdown.bind(self));
+        });
+    }
+
+    /**
+     * Sets up a web socket connection attached to the ghostServer and also configures a check for broken connections.
+     */
+    async configureWebSocket() {
+        // I wondered if this should run on it's own port or even run without a server (via `noServer: true`)
+        // but in the end this is how I did it. I'm not sure if it's best but I'd love to get opinions.
+        this.webSocketServer = new WebSocket.Server({server: this.httpServer});
+
+        const thirtySecondsInMilliseconds = 3 * 1000;
+        const heartbeat = setInterval(() => {
+            debug('Web socket client heartbeat...');
+
+            this.webSocketServer.clients.forEach((ws) => {
+                if (!ws.isAlive) {
+                    return ws.terminate();
+                }
+
+                ws.isAlive = false;
+                ws.ping();
+            });
+        }, thirtySecondsInMilliseconds);
+
+        // Notably there's no error handling here. There probably should be to make this production ready.
+        this.webSocketServer.on('connection', (ws) => {
+            debug('Web socket client connected');
+
+            ws.isAlive = true;
+
+            ws.on('pong', () => {
+                ws.isAlive = true;
+            });
+
+            ws.on('close', () => {
+                debug('Web socket client disconnected');
+                clearInterval(heartbeat);
+            });
         });
     }
 
