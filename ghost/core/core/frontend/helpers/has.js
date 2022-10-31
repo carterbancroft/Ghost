@@ -33,6 +33,30 @@ function handleCount(ctxAttr, data) {
     return false;
 }
 
+/**
+ * @param (String} regExAttr - The regular expression string
+ * @param {Array} data - The array of strings to test the regular expression against
+ */
+function handleRegEx(regExAttr, data) {
+    if (!data || !_.isFinite(data.length)) {
+        return false;
+    }
+
+    // RegEx is denoted in the helper with a starting and trailing slash. Remove them here so we're left with the raw RegEx string.
+    const strippedRegExAttr = regExAttr.substring(1, regExAttr.length - 1);
+
+    let regEx = null;
+    try {
+        regEx = new RegExp(strippedRegExAttr);
+    } catch {
+        // I was trying to decide if this should get called out somehow... The user probably doesn't get any warning if they typo other helper attrs so for now I'm leaving it like this.
+        return false;
+    }
+
+    // If any value in data matches the regex return true.
+    return _.some(data, d => regEx.test(d));
+}
+
 function evaluateTagList(expr, tags) {
     return expr.split(',').map(function (v) {
         return v.trim();
@@ -53,6 +77,12 @@ function handleTag(data, attrs) {
 
     if (attrs.tag.match(/count:/)) {
         return handleCount(attrs.tag, data.tags);
+    }
+
+    // I went with startsWith and endsWith here because the regEx literal syntax is something like /\/.*\// which creates a comment in JS.
+    // Maybe there's some other regex I could use but this is quick and dirty.
+    if (attrs.tag.startsWith('/') && attrs.tag.endsWith('/')) {
+        return handleRegEx(attrs.tag, _.map(data.tags, 'name'));
     }
 
     return evaluateTagList(attrs.tag, _.map(data.tags, 'name')) || false;
