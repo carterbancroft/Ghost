@@ -143,7 +143,8 @@ class GhostServer {
         // but in the end this is how I did it. I'm not sure if it's best but I'd love to get opinions.
         this.webSocketServer = new WebSocket.Server({server: this.httpServer});
 
-        const thirtySecondsInMilliseconds = 3 * 1000;
+        // Every 30 seconds check if any clients need to be terminated by pinging them.
+        const thirtySecondsInMilliseconds = 30 * 1000;
         const heartbeat = setInterval(() => {
             debug('Web socket client heartbeat...');
 
