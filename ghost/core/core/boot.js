@@ -332,7 +332,7 @@ async function initServices({ghostServer, config}) {
         }),
         comments.init(),
         linkTracking.init(),
-        audienceFeedback.init(),
+        audienceFeedback.init()
     ]);
     debug('End: Services');
 
