@@ -302,6 +302,18 @@ async function initServices({ghostServer, config}) {
     //       so they are initialized before it.
     await stripe.init();
 
+    // NOTE: The server won't be set up in a test context here so without this conditional e2e tests
+    // will fail. Ideally I would build out a framework for unit testing web sockets and mock this out
+    // in some way.
+    if (ghostServer?.webSocketServer) {
+        // This feels like a code smell to me. That I'm passing the ghostServer into this init function
+        // and then using it for this one init call. Both that and the fact that I'm passing something
+        // into init at all make me feel a little uneasy, like I'm missing a better solution. I do like
+        // the service model in this context but I'm not sure this is the right way to give it access
+        // to the webSocketServer.
+        await webSocket.init({webSocketServer: ghostServer.webSocketServer})
+    }
+
     await Promise.all([
         memberAttribution.init(),
         staffService.init(),
@@ -321,12 +333,6 @@ async function initServices({ghostServer, config}) {
         comments.init(),
         linkTracking.init(),
         audienceFeedback.init(),
-        // This feels like a code smell to me. That I'm passing the ghostServer into this init function
-        // and then using it for this one init call. Both that and the fact that I'm passing something
-        // into init at all make me feel a little uneasy, like I'm missing a better solution. I do like
-        // the service model in this context but I'm not sure this is the right way to give it access
-        // to the webSocketServer.
-        webSocket.init({webSocketServer: ghostServer.webSocketServer})
     ]);
     debug('End: Services');
 
